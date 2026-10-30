@@ -22,8 +22,7 @@ function createWindow() {
     }
   });
 
-  // Enable dark mode
-  mainWindow.webContents.setVisualZoomLevelLimits(1, 1);
+  // Load content
 
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);

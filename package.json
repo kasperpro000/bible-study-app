@@ -5,6 +5,7 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
+    "start": "electron .",
     "build": "tsc && vite build",
     "seed": "tsx scripts/seed-data.ts",
     "preview": "vite preview"
