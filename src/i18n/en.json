@@ -1,0 +1,68 @@
+{
+  "app": {
+    "title": "Berean Study Workstation",
+    "search_placeholder": "Search Scriptures (e.g. \"in the beginning\", faith)... (Ctrl+K)",
+    "offline_badge": "100% Offline",
+    "parallel_view": "Parallel View",
+    "single_view": "Single View",
+    "knowledge_graph": "Knowledge Graph",
+    "reading_plans": "Reading Plans",
+    "notes": "Notes",
+    "bookmarks": "Bookmarks",
+    "inspector": "Inspector",
+    "settings": "Settings"
+  },
+  "nav": {
+    "old_testament": "Old Testament",
+    "new_testament": "New Testament",
+    "chapters": "Chapters",
+    "filter_books": "Filter books...",
+    "next_chapter": "Next Chapter",
+    "prev_chapter": "Previous Chapter"
+  },
+  "reader": {
+    "font_size": "Font Size",
+    "font_family": "Font Style",
+    "serif": "Serif",
+    "sans": "Sans-serif",
+    "cross_refs_badge": "{{count}} cross-refs",
+    "highlight_yellow": "Yellow",
+    "highlight_blue": "Blue",
+    "highlight_green": "Green",
+    "highlight_rose": "Rose",
+    "remove_highlight": "Remove Highlight",
+    "add_bookmark": "Bookmark Verse",
+    "open_notes": "Write Note"
+  },
+  "inspector": {
+    "title": "Passage Study Inspector",
+    "cross_references": "Cross References",
+    "no_cross_refs": "No cross references found for this verse.",
+    "votes": "{{count}} citations",
+    "notes": "Verse Notes",
+    "note_placeholder": "Write study notes for this verse (Markdown supported, e.g. **bold**, *italic*, - list)...",
+    "save_note": "Save Note",
+    "entities": "Biblical Entities & Themes"
+  },
+  "search": {
+    "title": "Scripture Search",
+    "results_found": "{{count}} occurrences found",
+    "no_results": "No verses found matching your query.",
+    "select_translation": "Translation"
+  },
+  "plans": {
+    "title": "Reading Plans",
+    "today_reading": "Today's Reading",
+    "day": "Day {{number}}",
+    "mark_complete": "Mark as Complete",
+    "completed": "Completed"
+  },
+  "graph": {
+    "title": "Scripture Knowledge Graph",
+    "subtitle": "Discover connections across scripture, biblical figures, and theology",
+    "focus_verse": "Focus Current Verse",
+    "macro_view": "Canonical Overview",
+    "nodes": "Nodes",
+    "links": "Connections"
+  }
+}

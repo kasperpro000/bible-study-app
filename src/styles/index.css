@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    user-select: text;
+    overflow: hidden;
+  }
+
+  /* Custom Slim Scrollbar for Workstation Panels */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #273447;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #38bdf8;
+  }
+}
+
+.scripture-serif {
+  font-family: 'Crimson Pro', Georgia, serif;
+}
+
+.scripture-sans {
+  font-family: 'Inter', system-ui, sans-serif;
+}

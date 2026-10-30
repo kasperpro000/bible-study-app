@@ -1,0 +1,68 @@
+{
+  "app": {
+    "title": "Berean Bijbel Werkstation",
+    "search_placeholder": "Doorzoek de Schriften (bijv. \"in den beginne\", geloof)... (Ctrl+K)",
+    "offline_badge": "100% Offline",
+    "parallel_view": "Parallelle Weergave",
+    "single_view": "Enkele Weergave",
+    "knowledge_graph": "Kennisgraaf",
+    "reading_plans": "Leesplannen",
+    "notes": "Notities",
+    "bookmarks": "Bladwijzers",
+    "inspector": "Inspecteur",
+    "settings": "Instellingen"
+  },
+  "nav": {
+    "old_testament": "Oude Testament",
+    "new_testament": "Nieuwe Testament",
+    "chapters": "Hoofdstukken",
+    "filter_books": "Boeken filteren...",
+    "next_chapter": "Volgend Hoofdstuk",
+    "prev_chapter": "Vorig Hoofdstuk"
+  },
+  "reader": {
+    "font_size": "Lettergrootte",
+    "font_family": "Lettertype",
+    "serif": "Met schreef",
+    "sans": "Schreefloos",
+    "cross_refs_badge": "{{count}} kruisverwijzingen",
+    "highlight_yellow": "Geel",
+    "highlight_blue": "Blauw",
+    "highlight_green": "Groen",
+    "highlight_rose": "Roze",
+    "remove_highlight": "Markering Verwijderen",
+    "add_bookmark": "Bladwijzer Toevoegen",
+    "open_notes": "Notitie Schrijven"
+  },
+  "inspector": {
+    "title": "Tekststudie Inspecteur",
+    "cross_references": "Kruisverwijzingen",
+    "no_cross_refs": "Geen kruisverwijzingen gevonden voor dit vers.",
+    "votes": "{{count}} citaties",
+    "notes": "Versnotities",
+    "note_placeholder": "Schrijf persoonlijke notities bij dit vers (Markdown ondersteund, bijv. **vet**, *cursief*)...",
+    "save_note": "Notitie Opslaan",
+    "entities": "Bijbelse Figuren & Thema's"
+  },
+  "search": {
+    "title": "Bijbeltekst Zoeken",
+    "results_found": "{{count}} verzen gevonden",
+    "no_results": "Geen verzen gevonden die overeenkomen met uw zoekopdracht.",
+    "select_translation": "Vertaling"
+  },
+  "plans": {
+    "title": "Leesplannen",
+    "today_reading": "Lezing van Vandaag",
+    "day": "Dag {{number}}",
+    "mark_complete": "Markeer als Voltooid",
+    "completed": "Voltooid"
+  },
+  "graph": {
+    "title": "Bijbelse Kennisgraaf",
+    "subtitle": "Ontdek verbanden tussen teksten, historische personen en theologie",
+    "focus_verse": "Focus op Huidig Vers",
+    "macro_view": "Canoniek Overzicht",
+    "nodes": "Knopen",
+    "links": "Verbindingen"
+  }
+}
