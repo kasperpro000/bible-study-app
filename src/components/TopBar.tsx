@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Search, Columns2, Square, Network, Calendar, Globe, 
-  WifiOff, BookOpen, Bookmark, FileText, CheckCircle2 
+  WifiOff, BookOpen, Bookmark, FileText, CheckCircle2, Plus, FolderPlus 
 } from 'lucide-react';
 import type { Translation } from '../types/bible';
 
@@ -18,6 +18,7 @@ interface TopBarProps {
   onToggleGraph: () => void;
   isGraphOpen: boolean;
   onOpenPlans: () => void;
+  onOpenImport: () => void;
   activeSidebarTab: 'books' | 'bookmarks' | 'notes';
   onSelectSidebarTab: (tab: 'books' | 'bookmarks' | 'notes') => void;
 }
@@ -34,6 +35,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onToggleGraph,
   isGraphOpen,
   onOpenPlans,
+  onOpenImport,
   activeSidebarTab,
   onSelectSidebarTab
 }) => {
@@ -155,6 +157,17 @@ export const TopBar: React.FC<TopBarProps> = ({
             title={isParallel ? t('app.single_view') : t('app.parallel_view')}
           >
             {isParallel ? <Columns2 className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+          </button>
+
+          <div className="w-[1px] h-3.5 bg-workstation-border mx-0.5" />
+
+          {/* Manage & Import Translations Button */}
+          <button
+            onClick={onOpenImport}
+            className="p-1 rounded text-workstation-muted hover:text-workstation-accent hover:bg-workstation-hover transition-colors"
+            title="Import & Manage Translations"
+          >
+            <FolderPlus className="w-4 h-4" />
           </button>
         </div>
 

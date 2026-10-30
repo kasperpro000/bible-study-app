@@ -25,7 +25,7 @@ export class BibleDatabaseService {
       console.warn(`Warning: bibles.db not found at ${biblesDbPath}`);
     }
 
-    this.bibleDb = new Database(biblesDbPath, { readonly: true });
+    this.bibleDb = new Database(biblesDbPath, { readonly: false });
     this.bibleDb.pragma('journal_mode = WAL');
 
     // 2. Locate / create userdata.db
@@ -161,10 +161,261 @@ export class BibleDatabaseService {
     }
   }
 
-  // --- Bible Retrieval APIs ---
+  // --- Bible Retrieval & Translation Management APIs ---
 
   getTranslations(): Translation[] {
-    return this.bibleDb.prepare('SELECT * FROM translations ORDER BY id').all() as Translation[];
+    return this.bibleDb.prepare(`
+      SELECT t.*, (SELECT count(*) FROM verses v WHERE v.translation_id = t.id) as verse_count
+      FROM translations t 
+      ORDER BY t.id
+    `).all() as Translation[];
+  }
+
+  resolveBookId(bookRaw: any): number | null {
+    if (!bookRaw) return null;
+    const str = String(bookRaw).toLowerCase().replace(/[^\w\sÀ-ÿ]/g, '').trim();
+    if (!str) return null;
+
+    const num = parseInt(str, 10);
+    if (!isNaN(num) && num >= 1 && num <= 66) {
+      return num;
+    }
+
+    const BOOK_ALIASES: Record<string, number> = {
+      'gen': 1, 'genesis': 1, 'ge': 1, 'gn': 1,
+      'exo': 2, 'exod': 2, 'exodus': 2, 'ex': 2,
+      'lev': 3, 'leviticus': 3, 'le': 3, 'lv': 3,
+      'num': 4, 'numbers': 4, 'numeri': 4, 'nu': 4, 'nm': 4,
+      'deu': 5, 'deut': 5, 'deuteronomy': 5, 'deuteronomium': 5, 'dt': 5,
+      'jos': 6, 'josh': 6, 'joshua': 6, 'jozua': 6, 'joz': 6,
+      'jdg': 7, 'judg': 7, 'judges': 7, 'rechters': 7, 'recht': 7, 'jg': 7,
+      'rut': 8, 'ruth': 8, 'ru': 8,
+      '1sa': 9, '1sam': 9, '1samuel': 9, '1 samuel': 9, 'i samuel': 9, '1 sam': 9, '1 samuël': 9,
+      '2sa': 10, '2sam': 10, '2samuel': 10, '2 samuel': 10, 'ii samuel': 10, '2 sam': 10, '2 samuël': 10,
+      '1ki': 11, '1kgs': 11, '1kings': 11, '1 kings': 11, 'i kings': 11, '1 koningen': 11, '1kon': 11, '1 kgs': 11,
+      '2ki': 12, '2kgs': 12, '2kings': 12, '2 kings': 12, 'ii kings': 12, '2 koningen': 12, '2kon': 12, '2 kgs': 12,
+      '1ch': 13, '1chr': 13, '1chronicles': 13, '1 chronicles': 13, 'i chronicles': 13, '1 kronieken': 13, '1kron': 13,
+      '2ch': 14, '2chr': 14, '2chronicles': 14, '2 chronicles': 14, 'ii chronicles': 14, '2 kronieken': 14, '2kron': 14,
+      'ezr': 15, 'ezra': 15,
+      'neh': 16, 'nehemiah': 16, 'nehemia': 16,
+      'est': 17, 'esth': 17, 'esther': 17, 'ester': 17,
+      'job': 18, 'jb': 18,
+      'ps': 19, 'psa': 19, 'psalm': 19, 'psalms': 19, 'psalmen': 19,
+      'pro': 20, 'prov': 20, 'proverbs': 20, 'spreuken': 20, 'spr': 20, 'prv': 20,
+      'ecc': 21, 'eccl': 21, 'ecclesiastes': 21, 'prediker': 21, 'pred': 21, 'qoh': 21,
+      'sng': 22, 'song': 22, 'song of solomon': 22, 'hooglied': 22, 'hoogl': 22, 'canticles': 22, 'sos': 22,
+      'isa': 23, 'isaiah': 23, 'jesaja': 23, 'jes': 23,
+      'jer': 24, 'jeremiah': 24, 'jeremia': 24,
+      'lam': 25, 'lamentations': 25, 'klaagliederen': 25, 'klaagl': 25,
+      'ezk': 26, 'ezek': 26, 'ezekiel': 26, 'ezechiël': 26, 'ezech': 26,
+      'dan': 27, 'daniel': 27, 'daniël': 27,
+      'hos': 28, 'hosea': 28,
+      'jol': 29, 'joel': 29, 'joël': 29,
+      'amo': 30, 'amos': 30,
+      'oba': 31, 'obad': 31, 'obadiah': 31, 'obadja': 31,
+      'jon': 32, 'jonah': 32, 'jona': 32,
+      'mic': 33, 'micah': 33, 'micha': 33, 'mich': 33,
+      'nah': 34, 'nahum': 34,
+      'hab': 35, 'habakkuk': 35, 'habakuk': 35,
+      'zep': 36, 'zeph': 36, 'zephaniah': 36, 'sefanja': 36, 'sef': 36,
+      'hag': 37, 'haggai': 37,
+      'zec': 38, 'zech': 38, 'zechariah': 38, 'zacharia': 38, 'zach': 38,
+      'mal': 39, 'malachi': 39, 'maleachi': 39,
+      'mat': 40, 'matt': 40, 'matthew': 40, 'matteüs': 40, 'mattheus': 40, 'mt': 40,
+      'mrk': 41, 'mark': 41, 'marcus': 41, 'marc': 41, 'mk': 41,
+      'luk': 42, 'luke': 42, 'lucas': 42, 'luc': 42, 'lk': 42,
+      'jhn': 43, 'john': 43, 'johannes': 43, 'joh': 43, 'jn': 43,
+      'act': 44, 'acts': 44, 'handelingen': 44, 'hand': 44, 'ac': 44,
+      'rom': 45, 'romans': 45, 'romeinen': 45, 'ro': 45,
+      '1co': 46, '1cor': 46, '1corinthians': 46, '1 corinthians': 46, 'i corinthians': 46, '1 korintiërs': 46, '1kor': 46, '1 kor': 46,
+      '2co': 47, '2cor': 47, '2corinthians': 47, '2 corinthians': 47, 'ii corinthians': 47, '2 korintiërs': 47, '2kor': 47, '2 kor': 47,
+      'gal': 48, 'galatians': 48, 'galaten': 48, 'ga': 48,
+      'eph': 49, 'ephesians': 49, 'efeziërs': 49, 'efez': 49,
+      'php': 50, 'phil': 50, 'philippians': 50, 'filippenzen': 50, 'filip': 50,
+      'col': 51, 'colossians': 51, 'kolossenzen': 51, 'kol': 51,
+      '1th': 52, '1thess': 52, '1thessalonians': 52, '1 thessalonians': 52, 'i thessalonians': 52, '1 tessalonicenzen': 52, '1tess': 52,
+      '2th': 53, '2thess': 53, '2thessalonians': 53, '2 thessalonians': 53, 'ii thessalonians': 53, '2 tessalonicenzen': 53, '2tess': 53,
+      '1ti': 54, '1tim': 54, '1timothy': 54, '1 timothy': 54, 'i timothy': 54, '1 timoteüs': 54,
+      '2ti': 55, '2tim': 55, '2timothy': 55, '2 timothy': 55, 'ii timothy': 55, '2 timoteüs': 55,
+      'tit': 56, 'titus': 56,
+      'phm': 57, 'phlm': 57, 'philemon': 57, 'filemon': 57, 'filem': 57,
+      'heb': 58, 'hebrews': 58, 'hebreeën': 58, 'hebr': 58,
+      'jas': 59, 'james': 59, 'jakobus': 59, 'jak': 59, 'jm': 59,
+      '1pe': 60, '1pet': 60, '1peter': 60, '1 peter': 60, 'i peter': 60, '1 petrus': 60,
+      '2pe': 61, '2pet': 61, '2peter': 61, '2 peter': 61, 'ii petrus': 61, '2 petrus': 61,
+      '1jn': 62, '1john': 62, '1 john': 62, 'i john': 62, '1 johannes': 62, '1joh': 62,
+      '2jn': 63, '2john': 63, '2 john': 63, 'ii john': 63, '2 johannes': 63, '2joh': 63,
+      '3jn': 64, '3john': 64, '3 john': 64, 'iii john': 64, '3 johannes': 64, '3joh': 64,
+      'jud': 65, 'jude': 65, 'judas': 65,
+      'rev': 66, 'revelation': 66, 'openbaring': 66, 'openb': 66, 'apocalypse': 66
+    };
+
+    return BOOK_ALIASES[str] || null;
+  }
+
+  parseCsvLine(line: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current);
+    return result;
+  }
+
+  importTranslation(
+    metadata: { id: string; name: string; language: string; abbreviation?: string; description?: string },
+    filePath: string
+  ): { success: boolean; versesCount: number; error?: string } {
+    if (!fs.existsSync(filePath)) {
+      return { success: false, versesCount: 0, error: `File not found: ${filePath}` };
+    }
+
+    const ext = path.extname(filePath).toLowerCase();
+    const rawContent = fs.readFileSync(filePath, 'utf8');
+    const parsedVerses: { bookId: number; chapter: number; verse: number; text: string }[] = [];
+
+    const books = this.getBooks();
+    const bookMap = new Map<number, Book>();
+    books.forEach(b => bookMap.set(b.id, b));
+
+    if (ext === '.json') {
+      try {
+        const jsonData = JSON.parse(rawContent);
+        let list: any[] = [];
+        if (Array.isArray(jsonData)) {
+          list = jsonData;
+        } else if (jsonData.verses && Array.isArray(jsonData.verses)) {
+          list = jsonData.verses;
+        } else if (jsonData.resultset && Array.isArray(jsonData.resultset.row)) {
+          list = jsonData.resultset.row;
+        }
+
+        for (const item of list) {
+          const bookVal = item.book || item.book_name || item.book_id || item.field?.[0] || item[0];
+          const chVal = item.chapter || item.chapter_nr || item.field?.[1] || item[1];
+          const vVal = item.verse || item.verse_nr || item.field?.[2] || item[2];
+          const textVal = item.text || item.verse_text || item.field?.[3] || item[3];
+
+          const bookId = this.resolveBookId(bookVal);
+          const ch = parseInt(chVal, 10);
+          const v = parseInt(vVal, 10);
+          if (bookId && !isNaN(ch) && !isNaN(v) && textVal) {
+            parsedVerses.push({ bookId, chapter: ch, verse: v, text: String(textVal).trim() });
+          }
+        }
+      } catch (err: any) {
+        return { success: false, versesCount: 0, error: `JSON Parse error: ${err.message}` };
+      }
+    } else {
+      // CSV or plain text line-by-line
+      const lines = rawContent.split(/\r?\n/);
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line || line.startsWith('#')) continue;
+
+        // Skip CSV header if present
+        if (i === 0 && line.toLowerCase().includes('book') && line.toLowerCase().includes('verse')) continue;
+
+        // Try CSV parse first
+        const parts = this.parseCsvLine(line);
+        if (parts.length >= 4) {
+          const bookId = this.resolveBookId(parts[0]);
+          const ch = parseInt(parts[1], 10);
+          const v = parseInt(parts[2], 10);
+          const text = parts.slice(3).join(',').trim();
+          if (bookId && !isNaN(ch) && !isNaN(v) && text) {
+            parsedVerses.push({ bookId, chapter: ch, verse: v, text });
+            continue;
+          }
+        }
+
+        // Try standard reference regex: e.g. "Genesis 1:1 In the beginning..." or "Gen 1:1 In the beginning..."
+        const refMatch = line.match(/^((?:\d\s+)?[A-Za-zÀ-ÿ]+)\s+(\d+)[:.](\d+)\s+(.+)$/);
+        if (refMatch) {
+          const bookId = this.resolveBookId(refMatch[1]);
+          const ch = parseInt(refMatch[2], 10);
+          const v = parseInt(refMatch[3], 10);
+          const text = refMatch[4].trim();
+          if (bookId && !isNaN(ch) && !isNaN(v) && text) {
+            parsedVerses.push({ bookId, chapter: ch, verse: v, text });
+          }
+        }
+      }
+    }
+
+    if (parsedVerses.length === 0) {
+      return { success: false, versesCount: 0, error: 'No valid verses could be recognized in the file. Ensure the file contains Book, Chapter, Verse, and Text.' };
+    }
+
+    // Insert into database inside transaction
+    const transId = metadata.id.toUpperCase().trim();
+    const transName = metadata.name.trim();
+    const transLang = (metadata.language || 'en').toLowerCase().trim();
+    const transAbbr = (metadata.abbreviation || transId).toUpperCase().trim();
+    const transDesc = metadata.description || 'Custom Imported Translation';
+
+    const insertTrans = this.bibleDb.prepare(`
+      INSERT OR REPLACE INTO translations (id, name, language, abbreviation, description)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+
+    const insertVerse = this.bibleDb.prepare(`
+      INSERT OR REPLACE INTO verses (translation_id, book_id, chapter, verse, text)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+
+    const insertFts = this.bibleDb.prepare(`
+      INSERT INTO fts_verses (verse_id, translation_id, book_name_en, book_name_nl, chapter, verse, text)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const cleanVerses = this.bibleDb.prepare('DELETE FROM verses WHERE translation_id = ?');
+    const cleanFts = this.bibleDb.prepare('DELETE FROM fts_verses WHERE translation_id = ?');
+
+    const tx = this.bibleDb.transaction(() => {
+      insertTrans.run(transId, transName, transLang, transAbbr, transDesc);
+      cleanVerses.run(transId);
+      cleanFts.run(transId);
+
+      for (const pv of parsedVerses) {
+        const book = bookMap.get(pv.bookId);
+        const bookEn = book ? book.name_en : `Book ${pv.bookId}`;
+        const bookNl = book ? book.name_nl : `Boek ${pv.bookId}`;
+
+        const info = insertVerse.run(transId, pv.bookId, pv.chapter, pv.verse, pv.text);
+        insertFts.run(info.lastInsertRowid, transId, bookEn, bookNl, pv.chapter, pv.verse, pv.text);
+      }
+    });
+
+    tx();
+    return { success: true, versesCount: parsedVerses.length };
+  }
+
+  deleteTranslation(id: string) {
+    if (id === 'KJV' || id === 'SVV') {
+      throw new Error('Core translations (KJV and SVV) cannot be deleted.');
+    }
+    const tx = this.bibleDb.transaction(() => {
+      this.bibleDb.prepare('DELETE FROM fts_verses WHERE translation_id = ?').run(id);
+      this.bibleDb.prepare('DELETE FROM verses WHERE translation_id = ?').run(id);
+      this.bibleDb.prepare('DELETE FROM translations WHERE id = ?').run(id);
+    });
+    tx();
   }
 
   getBooks(): Book[] {

@@ -47,7 +47,17 @@ const api = {
     ipcRenderer.invoke('db:toggleReadingPlanDay', planId, dayNumber),
 
   getKnowledgeGraphData: (focus?: { bookId?: number; chapter?: number; verse?: number }): Promise<GraphData> =>
-    ipcRenderer.invoke('db:getKnowledgeGraphData', focus)
+    ipcRenderer.invoke('db:getKnowledgeGraphData', focus),
+
+  openBibleFileDialog: (): Promise<string | null> =>
+    ipcRenderer.invoke('dialog:openBibleFile'),
+  importTranslation: (
+    metadata: { id: string; name: string; language: string; abbreviation?: string; description?: string },
+    filePath: string
+  ): Promise<{ success: boolean; versesCount: number; error?: string }> =>
+    ipcRenderer.invoke('db:importTranslation', metadata, filePath),
+  deleteTranslation: (id: string): Promise<void> =>
+    ipcRenderer.invoke('db:deleteTranslation', id)
 };
 
 export type BibleApi = typeof api;

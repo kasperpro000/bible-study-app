@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { BibleDatabaseService } from './db/database';
@@ -39,6 +39,28 @@ function registerIpcHandlers() {
   dbService = new BibleDatabaseService();
 
   ipcMain.handle('db:getTranslations', () => dbService!.getTranslations());
+  ipcMain.handle('db:importTranslation', (_event, metadata, filePath) => 
+    dbService!.importTranslation(metadata, filePath)
+  );
+  ipcMain.handle('db:deleteTranslation', (_event, id) => 
+    dbService!.deleteTranslation(id)
+  );
+  ipcMain.handle('dialog:openBibleFile', async () => {
+    const result = await dialog.showOpenDialog(mainWindow!, {
+      title: 'Select Bible Translation File',
+      properties: ['openFile'],
+      filters: [
+        { name: 'Bible Files (*.csv, *.json, *.txt)', extensions: ['csv', 'json', 'txt'] },
+        { name: 'CSV Files (*.csv)', extensions: ['csv'] },
+        { name: 'JSON Files (*.json)', extensions: ['json'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
+    return result.filePaths[0];
+  });
   ipcMain.handle('db:getBooks', () => dbService!.getBooks());
   ipcMain.handle('db:getChapterVerses', (_event, translationId, bookId, chapter) => 
     dbService!.getChapterVerses(translationId, bookId, chapter)

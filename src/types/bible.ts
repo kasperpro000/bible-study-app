@@ -1,9 +1,10 @@
 export interface Translation {
   id: string;
   name: string;
-  language: 'en' | 'nl';
+  language: string;
   abbreviation: string;
   description: string;
+  verse_count?: number;
 }
 
 export interface Book {

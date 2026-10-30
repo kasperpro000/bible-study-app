@@ -6,6 +6,7 @@ import { InspectorContainer } from './components/Inspector/InspectorContainer';
 import { SearchModal } from './components/Search/SearchModal';
 import { KnowledgeGraph } from './components/Graph/KnowledgeGraph';
 import { ReadingPlanModal } from './components/ReadingPlan/ReadingPlanModal';
+import { ImportTranslationModal } from './components/Translations/ImportTranslationModal';
 
 import type { 
   Translation, Book, Verse, Highlight, Bookmark, Note, CrossReference 
@@ -41,6 +42,7 @@ export const App: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [isGraphOpen, setIsGraphOpen] = useState<boolean>(false);
   const [isPlansOpen, setIsPlansOpen] = useState<boolean>(false);
+  const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
 
   // --- Typography Preferences ---
   const [fontSize, setFontSize] = useState<number>(() => {
@@ -263,6 +265,7 @@ export const App: React.FC = () => {
         onToggleGraph={() => setIsGraphOpen(!isGraphOpen)}
         isGraphOpen={isGraphOpen}
         onOpenPlans={() => setIsPlansOpen(true)}
+        onOpenImport={() => setIsImportOpen(true)}
         activeSidebarTab={activeSidebarTab}
         onSelectSidebarTab={setActiveSidebarTab}
       />
@@ -350,6 +353,16 @@ export const App: React.FC = () => {
         isOpen={isPlansOpen}
         onClose={() => setIsPlansOpen(false)}
         onLoadReading={handleJumpToPassage}
+      />
+
+      <ImportTranslationModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        translations={translations}
+        onTranslationsUpdated={async () => {
+          const tr = await window.api.getTranslations();
+          setTranslations(tr);
+        }}
       />
     </div>
   );
