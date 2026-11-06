@@ -125,6 +125,11 @@ async function main() {
     fs.rmSync(tempDir, { recursive: true, force: true });
   } catch (e) {}
 
+  // Unite Hebrew OT and Greek NT into the single united ORIG translation option
+  console.log('\n--> Uniting Hebrew OT and Greek NT into single [ORIG] Original Texts option...');
+  const uniteScript = path.resolve(__dirname, 'unite-original-texts.ts');
+  execSync(`npx tsx "${uniteScript}"`, { stdio: 'inherit' });
+
   console.log('\n======================================================================');
   console.log('SUMMARY OF ALL INSTALLED BIBLES IN WORKSTATION:');
   console.log('======================================================================');

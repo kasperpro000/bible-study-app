@@ -188,26 +188,33 @@ export const InspectorContainer: React.FC<InspectorContainerProps> = ({
                     </span>
                   </div>
 
-                  {xr.to_verse_text && (
-                    <p 
-                      dir={['WLC', 'PESH'].includes(studyTrans) ? 'rtl' : 'ltr'}
-                      className={`text-[11px] text-slate-300 mt-1 line-clamp-2 ${
-                        studyTrans === 'WLC'
-                          ? 'scripture-hebrew text-right'
-                          : studyTrans === 'PESH'
-                          ? 'scripture-aramaic text-right'
-                          : ['TR', 'GRE'].includes(studyTrans)
-                          ? 'scripture-greek'
-                          : fontFamily === 'serif'
-                          ? 'scripture-serif'
-                          : fontFamily === 'mono'
-                          ? 'scripture-mono'
-                          : 'scripture-sans'
-                      }`}
-                    >
-                      {xr.to_verse_text}
-                    </p>
-                  )}
+                  {xr.to_verse_text && (() => {
+                    const isXrHvr = (studyTrans === 'ORIG' && xr.to_book_id <= 39) || studyTrans === 'WLC';
+                    const isXrGrk = (studyTrans === 'ORIG' && xr.to_book_id >= 40) || ['TR', 'GRE'].includes(studyTrans);
+                    const isXrArm = studyTrans === 'PESH';
+                    const isRtl = isXrHvr || isXrArm;
+
+                    return (
+                      <p 
+                        dir={isRtl ? 'rtl' : 'ltr'}
+                        className={`text-[11px] text-slate-300 mt-1 line-clamp-2 ${
+                          isXrHvr
+                            ? 'scripture-hebrew text-right'
+                            : isXrArm
+                            ? 'scripture-aramaic text-right'
+                            : isXrGrk
+                            ? 'scripture-greek'
+                            : fontFamily === 'serif'
+                            ? 'scripture-serif'
+                            : fontFamily === 'mono'
+                            ? 'scripture-mono'
+                            : 'scripture-sans'
+                        }`}
+                      >
+                        {xr.to_verse_text}
+                      </p>
+                    );
+                  })()}
                 </div>
               ))
             )}

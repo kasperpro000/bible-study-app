@@ -38,10 +38,10 @@ export const VerseItem: React.FC<VerseItemProps> = ({
 }) => {
   const currentPalette = highlight ? HIGHLIGHT_PALETTE.find(p => p.name === highlight.color) : null;
 
-  const isHebrew = verse.translation_id === 'WLC';
+  const isHebrew = (verse.translation_id === 'ORIG' || verse.translation_id === 'WLC') && verse.book_id <= 39;
+  const isGreek = (verse.translation_id === 'ORIG' || verse.translation_id === 'TR') && verse.book_id >= 40 || verse.translation_id === 'GRE';
   const isAramaic = verse.translation_id === 'PESH';
   const isRTL = isHebrew || isAramaic;
-  const isGreek = ['TR', 'GRE'].includes(verse.translation_id);
 
   const fontClass = isHebrew
     ? 'scripture-hebrew'
