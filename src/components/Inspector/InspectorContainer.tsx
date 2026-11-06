@@ -189,9 +189,22 @@ export const InspectorContainer: React.FC<InspectorContainerProps> = ({
                   </div>
 
                   {xr.to_verse_text && (
-                    <p className={`text-[11px] text-slate-300 mt-1 line-clamp-2 ${
-                      fontFamily === 'serif' ? 'scripture-serif' : fontFamily === 'mono' ? 'scripture-mono' : 'scripture-sans'
-                    }`}>
+                    <p 
+                      dir={['WLC', 'PESH'].includes(studyTrans) ? 'rtl' : 'ltr'}
+                      className={`text-[11px] text-slate-300 mt-1 line-clamp-2 ${
+                        studyTrans === 'WLC'
+                          ? 'scripture-hebrew text-right'
+                          : studyTrans === 'PESH'
+                          ? 'scripture-aramaic text-right'
+                          : ['TR', 'GRE'].includes(studyTrans)
+                          ? 'scripture-greek'
+                          : fontFamily === 'serif'
+                          ? 'scripture-serif'
+                          : fontFamily === 'mono'
+                          ? 'scripture-mono'
+                          : 'scripture-sans'
+                      }`}
+                    >
                       {xr.to_verse_text}
                     </p>
                   )}

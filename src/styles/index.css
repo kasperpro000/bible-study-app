@@ -43,3 +43,17 @@
 .scripture-mono {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
+
+.scripture-hebrew {
+  font-family: 'Taamey Frank CLM', 'Ezra SIL', 'SBL Hebrew', 'Frank Ruehl CLM', 'Times New Roman', serif;
+  direction: rtl;
+}
+
+.scripture-aramaic {
+  font-family: 'Estrangelo Edessa', 'Serto Batnan', 'Segoe UI Historic', 'Times New Roman', serif;
+  direction: rtl;
+}
+
+.scripture-greek {
+  font-family: 'Gentium Plus', 'SBL Greek', 'Palatino Linotype', 'Times New Roman', serif;
+}

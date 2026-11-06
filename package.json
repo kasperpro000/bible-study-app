@@ -8,6 +8,7 @@
     "start": "electron .",
     "build": "tsc && vite build",
     "seed": "tsx scripts/seed-data.ts",
+    "import:translations": "tsx scripts/import-translations.ts",
     "preview": "vite preview"
   },
   "keywords": [],

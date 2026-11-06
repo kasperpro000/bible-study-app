@@ -38,6 +38,23 @@ export const VerseItem: React.FC<VerseItemProps> = ({
 }) => {
   const currentPalette = highlight ? HIGHLIGHT_PALETTE.find(p => p.name === highlight.color) : null;
 
+  const isHebrew = verse.translation_id === 'WLC';
+  const isAramaic = verse.translation_id === 'PESH';
+  const isRTL = isHebrew || isAramaic;
+  const isGreek = ['TR', 'GRE'].includes(verse.translation_id);
+
+  const fontClass = isHebrew
+    ? 'scripture-hebrew'
+    : isAramaic
+    ? 'scripture-aramaic'
+    : isGreek
+    ? 'scripture-greek'
+    : fontFamily === 'serif'
+    ? 'scripture-serif'
+    : fontFamily === 'mono'
+    ? 'scripture-mono'
+    : 'scripture-sans';
+
   const getLineHeightMultiplier = () => {
     switch (lineSpacing) {
       case 'compact': return 1.4;
@@ -66,10 +83,12 @@ export const VerseItem: React.FC<VerseItemProps> = ({
       {/* Verse Text Body */}
       <div className="flex-1">
         <p
-          style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * getLineHeightMultiplier()}px` }}
-          className={`${
-            fontFamily === 'serif' ? 'scripture-serif' : fontFamily === 'mono' ? 'scripture-mono' : 'scripture-sans'
-          } ${isSelected ? 'text-white' : 'text-slate-200'} tracking-normal`}
+          dir={isRTL ? 'rtl' : 'ltr'}
+          style={{ 
+            fontSize: `${isHebrew ? fontSize + 2 : fontSize}px`, 
+            lineHeight: `${(isHebrew ? fontSize + 2 : fontSize) * getLineHeightMultiplier()}px` 
+          }}
+          className={`${fontClass} ${isRTL ? 'text-right' : ''} ${isSelected ? 'text-white' : 'text-slate-200'} tracking-normal`}
         >
           {verse.text}
         </p>
