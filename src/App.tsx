@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TopBar } from './components/TopBar';
 import { Sidebar } from './components/Sidebar';
 import { ReaderContainer } from './components/Reader/ReaderContainer';
@@ -7,18 +8,26 @@ import { SearchModal } from './components/Search/SearchModal';
 import { KnowledgeGraph } from './components/Graph/KnowledgeGraph';
 import { ReadingPlanModal } from './components/ReadingPlan/ReadingPlanModal';
 import { ImportTranslationModal } from './components/Translations/ImportTranslationModal';
+import { SettingsModal, FontFamilyType, LineSpacingType } from './components/Settings/SettingsModal';
 
 import type { 
   Translation, Book, Verse, Highlight, Bookmark, Note, CrossReference 
 } from './types/bible';
 
 export const App: React.FC = () => {
+  const { i18n } = useTranslation();
+
   // --- Translations & Books ---
   const [translations, setTranslations] = useState<Translation[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [primaryTrans, setPrimaryTrans] = useState<string>('KJV');
   const [secondaryTrans, setSecondaryTrans] = useState<string>('SVV');
   const [isParallel, setIsParallel] = useState<boolean>(true);
+
+  // --- Study & Cross-Reference Translation ---
+  const [studyTrans, setStudyTrans] = useState<string>(() => {
+    return localStorage.getItem('berean_study_trans') || (localStorage.getItem('berean_lang') === 'nl' ? 'SVV' : 'KJV');
+  });
 
   // --- Reading Position ---
   const [currentBookId, setCurrentBookId] = useState<number>(1);
@@ -43,13 +52,17 @@ export const App: React.FC = () => {
   const [isGraphOpen, setIsGraphOpen] = useState<boolean>(false);
   const [isPlansOpen, setIsPlansOpen] = useState<boolean>(false);
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   // --- Typography Preferences ---
   const [fontSize, setFontSize] = useState<number>(() => {
     return parseInt(localStorage.getItem('berean_font_size') || '18', 10);
   });
-  const [fontFamily, setFontFamily] = useState<'serif' | 'sans'>(() => {
-    return (localStorage.getItem('berean_font_family') as 'serif' | 'sans') || 'serif';
+  const [fontFamily, setFontFamily] = useState<FontFamilyType>(() => {
+    return (localStorage.getItem('berean_font_family') as FontFamilyType) || 'serif';
+  });
+  const [lineSpacing, setLineSpacing] = useState<LineSpacingType>(() => {
+    return (localStorage.getItem('berean_line_spacing') as LineSpacingType) || 'relaxed';
   });
 
   useEffect(() => {
@@ -60,6 +73,14 @@ export const App: React.FC = () => {
     localStorage.setItem('berean_font_family', fontFamily);
   }, [fontFamily]);
 
+  useEffect(() => {
+    localStorage.setItem('berean_line_spacing', lineSpacing);
+  }, [lineSpacing]);
+
+  useEffect(() => {
+    localStorage.setItem('berean_study_trans', studyTrans);
+  }, [studyTrans]);
+
   // 1. Initial Load: Metadata & User Data
   useEffect(() => {
     const init = async () => {
@@ -67,8 +88,8 @@ export const App: React.FC = () => {
         const [tr, bk, bm, nt] = await Promise.all([
           window.api.getTranslations(),
           window.api.getBooks(),
-          window.api.getBookmarks(),
-          window.api.getNotes()
+          window.api.getBookmarks(studyTrans, i18n.language),
+          window.api.getNotes(i18n.language)
         ]);
         setTranslations(tr);
         setBooks(bk);
@@ -80,6 +101,12 @@ export const App: React.FC = () => {
     };
     init();
   }, []);
+
+  // Refresh bookmarks & notes when study translation or UI language changes
+  useEffect(() => {
+    window.api.getBookmarks(studyTrans, i18n.language).then(setBookmarks).catch(console.error);
+    window.api.getNotes(i18n.language).then(setNotes).catch(console.error);
+  }, [studyTrans, i18n.language]);
 
   // 2. Load Verses for Current Chapter
   const loadChapter = useCallback(async (bookId: number, chapter: number) => {
@@ -98,7 +125,7 @@ export const App: React.FC = () => {
       const counts: Record<number, number> = {};
       await Promise.all(
         pVerses.slice(0, 40).map(async (v) => {
-          const refs = await window.api.getCrossReferences(bookId, chapter, v.verse, 10);
+          const refs = await window.api.getCrossReferences(bookId, chapter, v.verse, 10, studyTrans, i18n.language);
           if (refs.length > 0) {
             counts[v.verse] = refs.length;
           }
@@ -113,13 +140,13 @@ export const App: React.FC = () => {
     } catch (e) {
       console.error('Error loading chapter:', e);
     }
-  }, [primaryTrans, secondaryTrans, isParallel]);
+  }, [primaryTrans, secondaryTrans, isParallel, studyTrans, i18n.language]);
 
   useEffect(() => {
     loadChapter(currentBookId, currentChapter);
   }, [currentBookId, currentChapter, primaryTrans, secondaryTrans, isParallel, loadChapter]);
 
-  // 3. Load Cross References for Selected Verse
+  // 3. Load Cross References for Selected Verse using chosen study translation
   useEffect(() => {
     if (!selectedVerse) {
       setCrossReferences([]);
@@ -131,7 +158,9 @@ export const App: React.FC = () => {
           selectedVerse.book_id,
           selectedVerse.chapter,
           selectedVerse.verse,
-          40
+          40,
+          studyTrans,
+          i18n.language
         );
         setCrossReferences(refs);
       } catch (e) {
@@ -139,7 +168,7 @@ export const App: React.FC = () => {
       }
     };
     fetchXrefs();
-  }, [selectedVerse?.book_id, selectedVerse?.chapter, selectedVerse?.verse]);
+  }, [selectedVerse?.book_id, selectedVerse?.chapter, selectedVerse?.verse, studyTrans, i18n.language]);
 
   // 4. Navigation Handlers
   const handleSelectChapter = (bookId: number, chapter: number) => {
@@ -204,7 +233,7 @@ export const App: React.FC = () => {
         created_at: new Date().toISOString()
       };
       await window.api.saveBookmark(newBm);
-      const updated = await window.api.getBookmarks();
+      const updated = await window.api.getBookmarks(studyTrans, i18n.language);
       setBookmarks(updated);
     }
   };
@@ -216,7 +245,7 @@ export const App: React.FC = () => {
 
   const handleSaveNote = async (note: Note, linkedVerses?: { book_id: number; chapter: number; verse: number }[]) => {
     await window.api.saveNote(note, linkedVerses);
-    const updated = await window.api.getNotes();
+    const updated = await window.api.getNotes(i18n.language);
     setNotes(updated);
   };
 
@@ -266,6 +295,7 @@ export const App: React.FC = () => {
         isGraphOpen={isGraphOpen}
         onOpenPlans={() => setIsPlansOpen(true)}
         onOpenImport={() => setIsImportOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
         activeSidebarTab={activeSidebarTab}
         onSelectSidebarTab={setActiveSidebarTab}
       />
@@ -315,6 +345,7 @@ export const App: React.FC = () => {
           setFontSize={setFontSize}
           fontFamily={fontFamily}
           setFontFamily={setFontFamily}
+          lineSpacing={lineSpacing}
           crossRefsCounts={crossRefsCounts}
         />
 
@@ -325,6 +356,10 @@ export const App: React.FC = () => {
             currentBook={currentBook}
             crossReferences={crossReferences}
             notes={notes}
+            studyTrans={studyTrans}
+            onSelectStudyTrans={setStudyTrans}
+            translations={translations}
+            fontFamily={fontFamily}
             onSaveNote={handleSaveNote}
             onJumpToPassage={handleJumpToPassage}
             onClose={() => setIsInspectorOpen(false)}
@@ -346,6 +381,7 @@ export const App: React.FC = () => {
         onClose={() => setIsGraphOpen(false)}
         selectedVerse={selectedVerse}
         currentBook={currentBook}
+        studyTrans={studyTrans}
         onJumpToPassage={handleJumpToPassage}
       />
 
@@ -363,6 +399,25 @@ export const App: React.FC = () => {
           const tr = await window.api.getTranslations();
           setTranslations(tr);
         }}
+      />
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        translations={translations}
+        fontFamily={fontFamily}
+        setFontFamily={setFontFamily}
+        fontSize={fontSize}
+        setFontSize={setFontSize}
+        lineSpacing={lineSpacing}
+        setLineSpacing={setLineSpacing}
+        studyTrans={studyTrans}
+        setStudyTrans={setStudyTrans}
+        primaryTrans={primaryTrans}
+        setPrimaryTrans={setPrimaryTrans}
+        secondaryTrans={secondaryTrans}
+        setSecondaryTrans={setSecondaryTrans}
+        onOpenImport={() => setIsImportOpen(true)}
       />
     </div>
   );

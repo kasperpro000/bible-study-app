@@ -22,8 +22,9 @@ interface ReaderContainerProps {
   onToggleBookmark: (verse: Verse) => void;
   fontSize: number;
   setFontSize: React.Dispatch<React.SetStateAction<number>>;
-  fontFamily: 'serif' | 'sans';
-  setFontFamily: React.Dispatch<React.SetStateAction<'serif' | 'sans'>>;
+  fontFamily: 'serif' | 'sans' | 'mono';
+  setFontFamily: React.Dispatch<React.SetStateAction<'serif' | 'sans' | 'mono'>>;
+  lineSpacing?: 'compact' | 'normal' | 'relaxed';
   crossRefsCounts: Record<number, number>;
 }
 
@@ -47,6 +48,7 @@ export const ReaderContainer: React.FC<ReaderContainerProps> = ({
   setFontSize,
   fontFamily,
   setFontFamily,
+  lineSpacing = 'relaxed',
   crossRefsCounts
 }) => {
   const { t, i18n } = useTranslation();
@@ -120,7 +122,7 @@ export const ReaderContainer: React.FC<ReaderContainerProps> = ({
             <button
               onClick={() => setFontFamily('serif')}
               className={`px-2 py-1 rounded font-serif ${
-                fontFamily === 'serif' ? 'bg-workstation-active text-workstation-accent' : 'text-workstation-muted'
+                fontFamily === 'serif' ? 'bg-workstation-active text-workstation-accent font-semibold' : 'text-workstation-muted'
               }`}
               title="Serif font"
             >
@@ -129,11 +131,20 @@ export const ReaderContainer: React.FC<ReaderContainerProps> = ({
             <button
               onClick={() => setFontFamily('sans')}
               className={`px-2 py-1 rounded font-sans ${
-                fontFamily === 'sans' ? 'bg-workstation-active text-workstation-accent' : 'text-workstation-muted'
+                fontFamily === 'sans' ? 'bg-workstation-active text-workstation-accent font-semibold' : 'text-workstation-muted'
               }`}
               title="Sans-serif font"
             >
               Sans
+            </button>
+            <button
+              onClick={() => setFontFamily('mono')}
+              className={`px-2 py-1 rounded font-mono ${
+                fontFamily === 'mono' ? 'bg-workstation-active text-workstation-accent font-semibold' : 'text-workstation-muted'
+              }`}
+              title="Monospace font"
+            >
+              Mono
             </button>
           </div>
 
@@ -150,7 +161,7 @@ export const ReaderContainer: React.FC<ReaderContainerProps> = ({
               {fontSize}px
             </span>
             <button
-              onClick={() => setFontSize(s => Math.min(26, s + 1))}
+              onClick={() => setFontSize(s => Math.min(28, s + 1))}
               className="p-1 rounded text-workstation-muted hover:text-white hover:bg-workstation-hover"
               title="Increase font size"
             >
@@ -178,6 +189,7 @@ export const ReaderContainer: React.FC<ReaderContainerProps> = ({
               isBookmarked={bookmarkMap.has(verse.verse)}
               fontSize={fontSize}
               fontFamily={fontFamily}
+              lineSpacing={lineSpacing}
               onSelectVerse={onSelectVerse}
               onSetHighlight={onSetHighlight}
               onToggleBookmark={onToggleBookmark}
@@ -202,6 +214,7 @@ export const ReaderContainer: React.FC<ReaderContainerProps> = ({
                 isBookmarked={bookmarkMap.has(verse.verse)}
                 fontSize={fontSize}
                 fontFamily={fontFamily}
+                lineSpacing={lineSpacing}
                 onSelectVerse={onSelectVerse}
                 onSetHighlight={onSetHighlight}
                 onToggleBookmark={onToggleBookmark}

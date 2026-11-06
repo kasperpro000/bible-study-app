@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Search, Columns2, Square, Network, Calendar, Globe, 
-  WifiOff, BookOpen, Bookmark, FileText, CheckCircle2, Plus, FolderPlus 
+  WifiOff, BookOpen, Bookmark, FileText, CheckCircle2, Plus, FolderPlus, Settings 
 } from 'lucide-react';
 import type { Translation } from '../types/bible';
 
@@ -19,6 +19,7 @@ interface TopBarProps {
   isGraphOpen: boolean;
   onOpenPlans: () => void;
   onOpenImport: () => void;
+  onOpenSettings: () => void;
   activeSidebarTab: 'books' | 'bookmarks' | 'notes';
   onSelectSidebarTab: (tab: 'books' | 'bookmarks' | 'notes') => void;
 }
@@ -36,6 +37,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   isGraphOpen,
   onOpenPlans,
   onOpenImport,
+  onOpenSettings,
   activeSidebarTab,
   onSelectSidebarTab
 }) => {
@@ -203,6 +205,15 @@ export const TopBar: React.FC<TopBarProps> = ({
         >
           <Globe className="w-3.5 h-3.5 text-workstation-accent" />
           <span>{i18n.language}</span>
+        </button>
+
+        {/* Settings Menu Button */}
+        <button
+          onClick={onOpenSettings}
+          className="p-1.5 bg-workstation-bg hover:bg-workstation-hover border border-workstation-border text-workstation-muted hover:text-white rounded-lg text-xs transition-colors"
+          title={t('app.settings')}
+        >
+          <Settings className="w-4 h-4" />
         </button>
 
         {/* Offline Status Badge */}

@@ -33,9 +33,13 @@
 }
 
 .scripture-serif {
-  font-family: 'Crimson Pro', Georgia, serif;
+  font-family: 'Crimson Pro', Georgia, Cambria, 'Times New Roman', serif;
 }
 
 .scripture-sans {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.scripture-mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }

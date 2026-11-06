@@ -9,6 +9,7 @@ interface KnowledgeGraphProps {
   onClose: () => void;
   selectedVerse: Verse | null;
   currentBook: Book | null;
+  studyTrans?: string;
   onJumpToPassage: (bookId: number, chapter: number, verse?: number) => void;
 }
 
@@ -17,6 +18,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
   onClose,
   selectedVerse,
   currentBook,
+  studyTrans = 'KJV',
   onJumpToPassage
 }) => {
   const { t, i18n } = useTranslation();
@@ -35,11 +37,16 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
         const data = await window.api.getKnowledgeGraphData({
           bookId: selectedVerse.book_id,
           chapter: selectedVerse.chapter,
-          verse: selectedVerse.verse
+          verse: selectedVerse.verse,
+          translationId: studyTrans,
+          lang: i18n.language
         });
         setGraphData(data);
       } else {
-        const data = await window.api.getKnowledgeGraphData();
+        const data = await window.api.getKnowledgeGraphData({
+          translationId: studyTrans,
+          lang: i18n.language
+        });
         setGraphData(data);
       }
     } catch (e) {
@@ -53,7 +60,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
     if (isOpen) {
       loadGraph();
     }
-  }, [isOpen, graphMode, selectedVerse?.book_id, selectedVerse?.chapter, selectedVerse?.verse]);
+  }, [isOpen, graphMode, selectedVerse?.book_id, selectedVerse?.chapter, selectedVerse?.verse, studyTrans, i18n.language]);
 
   // Initialize and update ForceGraph canvas
   useEffect(() => {

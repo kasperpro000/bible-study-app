@@ -18,7 +18,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   activeTranslation,
   onSelectResult
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [query, setQuery] = useState('');
   const [selectedTrans, setSelectedTrans] = useState(activeTranslation);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -60,7 +60,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     const timer = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const hits = await window.api.searchVerses(query, selectedTrans, 60, 0);
+        const hits = await window.api.searchVerses(query, selectedTrans, 60, 0, i18n.language);
         setResults(hits);
       } catch (e) {
         console.error('Search failed:', e);
@@ -70,7 +70,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [query, selectedTrans]);
+  }, [query, selectedTrans, i18n.language]);
 
   if (!isOpen) return null;
 

@@ -64,5 +64,45 @@
     "macro_view": "Canonical Overview",
     "nodes": "Nodes",
     "links": "Connections"
+  },
+  "settings": {
+    "title": "Workstation Settings",
+    "subtitle": "Customize typography, display preferences, and default study translations",
+    "tabs": {
+      "appearance": "Appearance & Typography",
+      "translations": "Translations & References",
+      "general": "General & Language"
+    },
+    "typography": {
+      "font_family": "Reader Font Family",
+      "font_family_desc": "Select the typeface for reading biblical scripture",
+      "serif": "Classical Serif (Crimson / Georgia)",
+      "sans": "Modern Sans (Inter / Clean UI)",
+      "mono": "Monospace (Study & Analysis)",
+      "font_size": "Text Size",
+      "font_size_desc": "Adjust the base font size for the scripture reader",
+      "line_height": "Line Spacing",
+      "line_height_desc": "Spacing between lines of text for optimal readability",
+      "compact": "Compact",
+      "normal": "Normal",
+      "relaxed": "Relaxed",
+      "preview": "Typography Live Preview"
+    },
+    "bible_versions": {
+      "study_version": "Cross-Reference & Study Bible Version",
+      "study_version_desc": "The Bible version used to display verse text in cross-references, bookmarks, knowledge graph, and auxiliary previews instead of English only.",
+      "primary_version": "Primary Reading Translation",
+      "secondary_version": "Secondary (Parallel) Translation",
+      "installed_count": "{{count}} translations installed",
+      "manage_translations": "Import / Manage Translations"
+    },
+    "language": {
+      "app_language": "Application Language",
+      "app_language_desc": "Choose the interface language for Berean Workstation",
+      "english": "English",
+      "dutch": "Nederlands (Dutch)"
+    },
+    "reset_defaults": "Reset to Defaults",
+    "close": "Close"
   }
 }

@@ -2,16 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Network, FileText, Sparkles, ExternalLink, Save, 
-  Trash2, X, ChevronRight, Eye, Edit3 
+  Trash2, X, ChevronRight, Eye, Edit3, BookOpen 
 } from 'lucide-react';
 import { marked } from 'marked';
-import type { Verse, CrossReference, Note, Book } from '../../types/bible';
+import type { Verse, CrossReference, Note, Book, Translation } from '../../types/bible';
 
 interface InspectorContainerProps {
   selectedVerse: Verse | null;
   currentBook: Book | null;
   crossReferences: CrossReference[];
   notes: Note[];
+  studyTrans?: string;
+  onSelectStudyTrans?: (transId: string) => void;
+  translations?: Translation[];
+  fontFamily?: 'serif' | 'sans' | 'mono';
   onSaveNote: (note: Note, linkedVerses?: { book_id: number; chapter: number; verse: number }[]) => void;
   onJumpToPassage: (bookId: number, chapter: number, verse?: number) => void;
   onClose: () => void;
@@ -22,6 +26,10 @@ export const InspectorContainer: React.FC<InspectorContainerProps> = ({
   currentBook,
   crossReferences,
   notes,
+  studyTrans = 'KJV',
+  onSelectStudyTrans,
+  translations = [],
+  fontFamily = 'serif',
   onSaveNote,
   onJumpToPassage,
   onClose
@@ -123,7 +131,9 @@ export const InspectorContainer: React.FC<InspectorContainerProps> = ({
       {/* Selected Verse Banner */}
       {selectedVerse && (
         <div className="p-3 bg-workstation-panel/40 border-b border-workstation-border/60">
-          <p className="text-xs text-slate-300 italic line-clamp-3 scripture-serif">
+          <p className={`text-xs text-slate-300 italic line-clamp-3 ${
+            fontFamily === 'serif' ? 'scripture-serif' : fontFamily === 'mono' ? 'scripture-mono' : 'scripture-sans'
+          }`}>
             "{selectedVerse.text}"
           </p>
         </div>
@@ -131,36 +141,64 @@ export const InspectorContainer: React.FC<InspectorContainerProps> = ({
 
       {/* Tab Body: CROSS REFERENCES */}
       {activeTab === 'xrefs' && (
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {crossReferences.length === 0 ? (
-            <div className="text-center py-12 px-4 text-xs text-workstation-muted">
-              {selectedVerse ? t('inspector.no_cross_refs') : 'Click any verse to inspect cross-references.'}
-            </div>
-          ) : (
-            crossReferences.map((xr) => (
-              <div
-                key={xr.id}
-                onClick={() => onJumpToPassage(xr.to_book_id, xr.to_chapter, xr.to_verse)}
-                className="p-2.5 rounded-lg bg-workstation-panel hover:bg-workstation-hover border border-workstation-border cursor-pointer group transition-all"
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Quick Version Switcher for Cross References */}
+          <div className="px-3 py-1.5 bg-workstation-bg/90 border-b border-workstation-border flex items-center justify-between text-[11px] text-workstation-muted flex-shrink-0">
+            <span className="font-medium text-slate-300 flex items-center gap-1">
+              <BookOpen className="w-3 h-3 text-workstation-accent" />
+              <span>Version:</span>
+            </span>
+            {translations.length > 0 && onSelectStudyTrans ? (
+              <select
+                value={studyTrans}
+                onChange={(e) => onSelectStudyTrans(e.target.value)}
+                className="bg-workstation-panel border border-workstation-border text-white text-[11px] font-semibold rounded px-1.5 py-0.5 focus:outline-none focus:border-workstation-accent cursor-pointer"
+                title="Change version for cross-reference text"
               >
-                <div className="flex items-center justify-between text-xs font-semibold text-workstation-accent group-hover:underline">
-                  <div className="flex items-center gap-1.5">
-                    <ExternalLink className="w-3 h-3 text-workstation-muted group-hover:text-workstation-accent" />
-                    <span>{xr.to_book_name} {xr.to_chapter}:{xr.to_verse}</span>
-                  </div>
-                  <span className="text-[10px] text-workstation-muted font-mono bg-workstation-bg px-1.5 py-0.5 rounded border border-workstation-border">
-                    {xr.votes} votes
-                  </span>
-                </div>
+                {translations.map((tr) => (
+                  <option key={tr.id} value={tr.id} className="bg-workstation-panel text-white">
+                    {tr.id} ({tr.language.toUpperCase()})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="font-mono text-workstation-accent font-semibold">{studyTrans}</span>
+            )}
+          </div>
 
-                {xr.to_verse_text && (
-                  <p className="text-[11px] text-slate-300 mt-1 line-clamp-2 scripture-serif">
-                    {xr.to_verse_text}
-                  </p>
-                )}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            {crossReferences.length === 0 ? (
+              <div className="text-center py-12 px-4 text-xs text-workstation-muted">
+                {selectedVerse ? t('inspector.no_cross_refs') : 'Click any verse to inspect cross-references.'}
               </div>
-            ))
-          )}
+            ) : (
+              crossReferences.map((xr) => (
+                <div
+                  key={xr.id}
+                  onClick={() => onJumpToPassage(xr.to_book_id, xr.to_chapter, xr.to_verse)}
+                  className="p-2.5 rounded-lg bg-workstation-panel hover:bg-workstation-hover border border-workstation-border cursor-pointer group transition-all"
+                >
+                  <div className="flex items-center justify-between text-xs font-semibold text-workstation-accent group-hover:underline">
+                    <div className="flex items-center gap-1.5">
+                      <ExternalLink className="w-3 h-3 text-workstation-muted group-hover:text-workstation-accent" />
+                      <span>{xr.to_book_name} {xr.to_chapter}:{xr.to_verse}</span>
+                    </div>
+                    <span className="text-[10px] text-workstation-muted font-mono bg-workstation-bg px-1.5 py-0.5 rounded border border-workstation-border">
+                      {xr.votes} votes
+                    </span>
+                  </div>
+
+                  {xr.to_verse_text && (
+                    <p className={`text-[11px] text-slate-300 mt-1 line-clamp-2 ${
+                      fontFamily === 'serif' ? 'scripture-serif' : fontFamily === 'mono' ? 'scripture-mono' : 'scripture-sans'
+                    }`}>
+                      {xr.to_verse_text}
+                    </p>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
 

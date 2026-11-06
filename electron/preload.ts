@@ -11,10 +11,10 @@ const api = {
     ipcRenderer.invoke('db:getChapterVerses', translationId, bookId, chapter),
   getVerse: (translationId: string, bookId: number, chapter: number, verse: number): Promise<Verse | undefined> =>
     ipcRenderer.invoke('db:getVerse', translationId, bookId, chapter, verse),
-  searchVerses: (query: string, translationId: string, limit?: number, offset?: number): Promise<SearchResult[]> =>
-    ipcRenderer.invoke('db:searchVerses', query, translationId, limit, offset),
-  getCrossReferences: (bookId: number, chapter: number, verse: number, limit?: number): Promise<CrossReference[]> =>
-    ipcRenderer.invoke('db:getCrossReferences', bookId, chapter, verse, limit),
+  searchVerses: (query: string, translationId: string, limit?: number, offset?: number, lang?: string): Promise<SearchResult[]> =>
+    ipcRenderer.invoke('db:searchVerses', query, translationId, limit, offset, lang),
+  getCrossReferences: (bookId: number, chapter: number, verse: number, limit?: number, translationId?: string, lang?: string): Promise<CrossReference[]> =>
+    ipcRenderer.invoke('db:getCrossReferences', bookId, chapter, verse, limit, translationId, lang),
   
   getHighlights: (bookId: number, chapter: number): Promise<Highlight[]> =>
     ipcRenderer.invoke('db:getHighlights', bookId, chapter),
@@ -25,15 +25,15 @@ const api = {
   deleteHighlight: (id: string): Promise<void> =>
     ipcRenderer.invoke('db:deleteHighlight', id),
 
-  getBookmarks: (): Promise<Bookmark[]> =>
-    ipcRenderer.invoke('db:getBookmarks'),
+  getBookmarks: (translationId?: string, lang?: string): Promise<Bookmark[]> =>
+    ipcRenderer.invoke('db:getBookmarks', translationId, lang),
   saveBookmark: (bm: Bookmark): Promise<void> =>
     ipcRenderer.invoke('db:saveBookmark', bm),
   deleteBookmark: (id: string): Promise<void> =>
     ipcRenderer.invoke('db:deleteBookmark', id),
 
-  getNotes: (): Promise<Note[]> =>
-    ipcRenderer.invoke('db:getNotes'),
+  getNotes: (lang?: string): Promise<Note[]> =>
+    ipcRenderer.invoke('db:getNotes', lang),
   saveNote: (note: Note, linkedVerses?: { book_id: number; chapter: number; verse: number }[]): Promise<void> =>
     ipcRenderer.invoke('db:saveNote', note, linkedVerses),
   deleteNote: (id: string): Promise<void> =>
@@ -41,12 +41,12 @@ const api = {
 
   getReadingPlans: (): Promise<ReadingPlan[]> =>
     ipcRenderer.invoke('db:getReadingPlans'),
-  getReadingPlanDays: (planId: string): Promise<ReadingPlanDay[]> =>
-    ipcRenderer.invoke('db:getReadingPlanDays', planId),
+  getReadingPlanDays: (planId: string, lang?: string): Promise<ReadingPlanDay[]> =>
+    ipcRenderer.invoke('db:getReadingPlanDays', planId, lang),
   toggleReadingPlanDay: (planId: string, dayNumber: number): Promise<boolean> =>
     ipcRenderer.invoke('db:toggleReadingPlanDay', planId, dayNumber),
 
-  getKnowledgeGraphData: (focus?: { bookId?: number; chapter?: number; verse?: number }): Promise<GraphData> =>
+  getKnowledgeGraphData: (focus?: { bookId?: number; chapter?: number; verse?: number; translationId?: string; lang?: string }): Promise<GraphData> =>
     ipcRenderer.invoke('db:getKnowledgeGraphData', focus),
 
   openBibleFileDialog: (): Promise<string | null> =>

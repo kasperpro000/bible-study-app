@@ -437,7 +437,7 @@ export class BibleDatabaseService {
     `).get(translationId, bookId, chapter, verse) as Verse | undefined;
   }
 
-  searchVerses(query: string, translationId: string = 'KJV', limit: number = 50, offset: number = 0): SearchResult[] {
+  searchVerses(query: string, translationId: string = 'KJV', limit: number = 50, offset: number = 0, lang: string = 'en'): SearchResult[] {
     if (!query || query.trim().length === 0) return [];
     
     // Clean query for FTS5 syntax
@@ -465,11 +465,12 @@ export class BibleDatabaseService {
         LIMIT ? OFFSET ?
       `).all(ftsQuery, translationId, limit, offset) as any[];
 
+      const isDutch = lang === 'nl' || translationId === 'SVV';
       return rows.map(r => ({
         verse_id: r.verse_id,
         translation_id: r.translation_id,
         book_id: r.book_id,
-        book_name: translationId === 'SVV' ? r.book_name_nl : r.book_name_en,
+        book_name: isDutch && r.book_name_nl ? r.book_name_nl : r.book_name_en,
         chapter: r.chapter,
         verse: r.verse,
         text: r.text,
@@ -481,7 +482,15 @@ export class BibleDatabaseService {
     }
   }
 
-  getCrossReferences(bookId: number, chapter: number, verse: number, limit: number = 30): CrossReference[] {
+  getCrossReferences(
+    bookId: number, 
+    chapter: number, 
+    verse: number, 
+    limit: number = 30,
+    translationId: string = 'KJV',
+    lang: string = 'en'
+  ): CrossReference[] {
+    const isDutch = lang === 'nl';
     const rows = this.bibleDb.prepare(`
       SELECT 
         x.id,
@@ -490,16 +499,16 @@ export class BibleDatabaseService {
         x.votes,
         b.name_en as to_book_name_en,
         b.name_nl as to_book_name_nl,
-        v_en.text as to_verse_text_en,
-        v_nl.text as to_verse_text_nl
+        v_target.text as to_verse_text_target,
+        v_fallback.text as to_verse_text_fallback
       FROM cross_references x
       JOIN books b ON x.to_book_id = b.id
-      LEFT JOIN verses v_en ON (v_en.translation_id = 'KJV' AND v_en.book_id = x.to_book_id AND v_en.chapter = x.to_chapter AND v_en.verse = x.to_verse)
-      LEFT JOIN verses v_nl ON (v_nl.translation_id = 'SVV' AND v_nl.book_id = x.to_book_id AND v_nl.chapter = x.to_chapter AND v_nl.verse = x.to_verse)
+      LEFT JOIN verses v_target ON (v_target.translation_id = ? AND v_target.book_id = x.to_book_id AND v_target.chapter = x.to_chapter AND v_target.verse = x.to_verse)
+      LEFT JOIN verses v_fallback ON (v_fallback.translation_id = 'KJV' AND v_fallback.book_id = x.to_book_id AND v_fallback.chapter = x.to_chapter AND v_fallback.verse = x.to_verse)
       WHERE x.from_book_id = ? AND x.from_chapter = ? AND x.from_verse = ?
       ORDER BY x.votes DESC
       LIMIT ?
-    `).all(bookId, chapter, verse, limit) as any[];
+    `).all(translationId, bookId, chapter, verse, limit) as any[];
 
     return rows.map(r => ({
       id: r.id,
@@ -510,8 +519,8 @@ export class BibleDatabaseService {
       to_chapter: r.to_chapter,
       to_verse: r.to_verse,
       votes: r.votes,
-      to_book_name: r.to_book_name_en,
-      to_verse_text: r.to_verse_text_en || r.to_verse_text_nl
+      to_book_name: isDutch && r.to_book_name_nl ? r.to_book_name_nl : r.to_book_name_en,
+      to_verse_text: r.to_verse_text_target || r.to_verse_text_fallback || ''
     }));
   }
 
@@ -538,19 +547,24 @@ export class BibleDatabaseService {
     this.userDb.prepare('DELETE FROM highlights WHERE id = ?').run(id);
   }
 
-  getBookmarks(): Bookmark[] {
+  getBookmarks(translationId: string = 'KJV', lang: string = 'en'): Bookmark[] {
+    const isDutch = lang === 'nl';
     const rows = this.userDb.prepare(`
       SELECT * FROM bookmarks ORDER BY created_at DESC
     `).all() as Bookmark[];
 
-    // Enrich with book name
+    // Enrich with book name and verse text in chosen translation
     return rows.map(bm => {
       const book = this.bibleDb.prepare('SELECT name_en, name_nl FROM books WHERE id = ?').get(bm.book_id) as any;
-      const verse = this.bibleDb.prepare('SELECT text FROM verses WHERE translation_id = ? AND book_id = ? AND chapter = ? AND verse = ?')
-        .get('KJV', bm.book_id, bm.chapter, bm.verse) as any;
+      let verse = this.bibleDb.prepare('SELECT text FROM verses WHERE translation_id = ? AND book_id = ? AND chapter = ? AND verse = ?')
+        .get(translationId, bm.book_id, bm.chapter, bm.verse) as any;
+      if (!verse && translationId !== 'KJV') {
+        verse = this.bibleDb.prepare('SELECT text FROM verses WHERE translation_id = ? AND book_id = ? AND chapter = ? AND verse = ?')
+          .get('KJV', bm.book_id, bm.chapter, bm.verse) as any;
+      }
       return {
         ...bm,
-        book_name: book ? book.name_en : `Book ${bm.book_id}`,
+        book_name: book ? (isDutch && book.name_nl ? book.name_nl : book.name_en) : `Book ${bm.book_id}`,
         verse_text: verse ? verse.text : ''
       };
     });
@@ -569,7 +583,8 @@ export class BibleDatabaseService {
 
   // --- Notes ---
 
-  getNotes(): Note[] {
+  getNotes(lang: string = 'en'): Note[] {
+    const isDutch = lang === 'nl';
     const notes = this.userDb.prepare('SELECT * FROM notes ORDER BY updated_at DESC').all() as Note[];
     const linksStmt = this.userDb.prepare('SELECT book_id, chapter, verse FROM note_verse_links WHERE note_id = ?');
 
@@ -578,12 +593,12 @@ export class BibleDatabaseService {
       return {
         ...n,
         linked_verses: links.map(l => {
-          const b = this.bibleDb.prepare('SELECT name_en FROM books WHERE id = ?').get(l.book_id) as any;
+          const b = this.bibleDb.prepare('SELECT name_en, name_nl FROM books WHERE id = ?').get(l.book_id) as any;
           return {
             book_id: l.book_id,
             chapter: l.chapter,
             verse: l.verse,
-            book_name: b ? b.name_en : `Book ${l.book_id}`
+            book_name: b ? (isDutch && b.name_nl ? b.name_nl : b.name_en) : `Book ${l.book_id}`
           };
         })
       };
@@ -629,7 +644,8 @@ export class BibleDatabaseService {
     });
   }
 
-  getReadingPlanDays(planId: string): ReadingPlanDay[] {
+  getReadingPlanDays(planId: string, lang: string = 'en'): ReadingPlanDay[] {
+    const isDutch = lang === 'nl';
     const rows = this.userDb.prepare(`
       SELECT d.plan_id, d.day_number, d.readings_json,
              (CASE WHEN p.completed_at IS NOT NULL THEN 1 ELSE 0 END) as completed
@@ -654,7 +670,7 @@ export class BibleDatabaseService {
           const b = this.bibleDb.prepare('SELECT name_en, name_nl FROM books WHERE id = ?').get(rd.book_id) as any;
           return {
             ...rd,
-            book_name: b ? b.name_en : `Book ${rd.book_id}`
+            book_name: b ? (isDutch && b.name_nl ? b.name_nl : b.name_en) : `Book ${rd.book_id}`
           };
         })
       };
@@ -674,9 +690,11 @@ export class BibleDatabaseService {
 
   // --- Knowledge Graph Engine ---
 
-  getKnowledgeGraphData(focus?: { bookId?: number; chapter?: number; verse?: number }): GraphData {
+  getKnowledgeGraphData(focus?: { bookId?: number; chapter?: number; verse?: number; translationId?: string; lang?: string }): GraphData {
     const nodesMap = new Map<string, GraphNode>();
     const edges: GraphEdge[] = [];
+    const translationId = focus?.translationId || 'KJV';
+    const isDutch = focus?.lang === 'nl';
 
     // Helper to add nodes safely
     const addNode = (node: GraphNode) => {
@@ -688,13 +706,19 @@ export class BibleDatabaseService {
     // 1. If focused on a specific verse
     if (focus && focus.bookId && focus.chapter && focus.verse) {
       const centerId = `v_${focus.bookId}_${focus.chapter}_${focus.verse}`;
-      const centerBook = this.bibleDb.prepare('SELECT name_en FROM books WHERE id = ?').get(focus.bookId) as any;
-      const centerVerse = this.bibleDb.prepare('SELECT text FROM verses WHERE translation_id = ? AND book_id = ? AND chapter = ? AND verse = ?')
-        .get('KJV', focus.bookId, focus.chapter, focus.verse) as any;
+      const centerBook = this.bibleDb.prepare('SELECT name_en, name_nl FROM books WHERE id = ?').get(focus.bookId) as any;
+      let centerVerse = this.bibleDb.prepare('SELECT text FROM verses WHERE translation_id = ? AND book_id = ? AND chapter = ? AND verse = ?')
+        .get(translationId, focus.bookId, focus.chapter, focus.verse) as any;
+      if (!centerVerse && translationId !== 'KJV') {
+        centerVerse = this.bibleDb.prepare('SELECT text FROM verses WHERE translation_id = ? AND book_id = ? AND chapter = ? AND verse = ?')
+          .get('KJV', focus.bookId, focus.chapter, focus.verse) as any;
+      }
+
+      const bookDisplayName = centerBook ? (isDutch && centerBook.name_nl ? centerBook.name_nl : centerBook.name_en) : 'Book';
 
       addNode({
         id: centerId,
-        name: `${centerBook ? centerBook.name_en : 'Book'} ${focus.chapter}:${focus.verse}`,
+        name: `${bookDisplayName} ${focus.chapter}:${focus.verse}`,
         type: 'verse',
         color: '#38bdf8', // radiant cyan
         val: 12,
@@ -702,8 +726,8 @@ export class BibleDatabaseService {
         passage: { book_id: focus.bookId, chapter: focus.chapter, verse: focus.verse }
       });
 
-      // Get cross-references for this verse
-      const xrefs = this.getCrossReferences(focus.bookId, focus.chapter, focus.verse, 25);
+      // Get cross-references for this verse using user's chosen translation and language
+      const xrefs = this.getCrossReferences(focus.bookId, focus.chapter, focus.verse, 25, translationId, focus?.lang || 'en');
       xrefs.forEach(xr => {
         const targetId = `v_${xr.to_book_id}_${xr.to_chapter}_${xr.to_verse}`;
         addNode({

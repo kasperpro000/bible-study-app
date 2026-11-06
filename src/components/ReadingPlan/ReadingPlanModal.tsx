@@ -14,7 +14,7 @@ export const ReadingPlanModal: React.FC<ReadingPlanModalProps> = ({
   onClose,
   onLoadReading
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [plans, setPlans] = useState<ReadingPlan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const [days, setDays] = useState<ReadingPlanDay[]>([]);
@@ -44,7 +44,7 @@ export const ReadingPlanModal: React.FC<ReadingPlanModalProps> = ({
   const loadDays = async (planId: string) => {
     setIsLoading(true);
     try {
-      const planDays = await window.api.getReadingPlanDays(planId);
+      const planDays = await window.api.getReadingPlanDays(planId, i18n.language);
       setDays(planDays);
     } catch (e) {
       console.error('Failed to load days:', e);

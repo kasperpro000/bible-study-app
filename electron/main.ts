@@ -68,11 +68,11 @@ function registerIpcHandlers() {
   ipcMain.handle('db:getVerse', (_event, translationId, bookId, chapter, verse) => 
     dbService!.getVerse(translationId, bookId, chapter, verse)
   );
-  ipcMain.handle('db:searchVerses', (_event, query, translationId, limit, offset) => 
-    dbService!.searchVerses(query, translationId, limit, offset)
+  ipcMain.handle('db:searchVerses', (_event, query, translationId, limit, offset, lang) => 
+    dbService!.searchVerses(query, translationId, limit, offset, lang)
   );
-  ipcMain.handle('db:getCrossReferences', (_event, bookId, chapter, verse, limit) => 
-    dbService!.getCrossReferences(bookId, chapter, verse, limit)
+  ipcMain.handle('db:getCrossReferences', (_event, bookId, chapter, verse, limit, translationId, lang) => 
+    dbService!.getCrossReferences(bookId, chapter, verse, limit, translationId, lang)
   );
 
   ipcMain.handle('db:getHighlights', (_event, bookId, chapter) => 
@@ -88,8 +88,8 @@ function registerIpcHandlers() {
     dbService!.deleteHighlight(id)
   );
 
-  ipcMain.handle('db:getBookmarks', () => 
-    dbService!.getBookmarks()
+  ipcMain.handle('db:getBookmarks', (_event, translationId, lang) => 
+    dbService!.getBookmarks(translationId, lang)
   );
   ipcMain.handle('db:saveBookmark', (_event, bm) => 
     dbService!.saveBookmark(bm)
@@ -98,8 +98,8 @@ function registerIpcHandlers() {
     dbService!.deleteBookmark(id)
   );
 
-  ipcMain.handle('db:getNotes', () => 
-    dbService!.getNotes()
+  ipcMain.handle('db:getNotes', (_event, lang) => 
+    dbService!.getNotes(lang)
   );
   ipcMain.handle('db:saveNote', (_event, note, linkedVerses) => 
     dbService!.saveNote(note, linkedVerses)
@@ -111,8 +111,8 @@ function registerIpcHandlers() {
   ipcMain.handle('db:getReadingPlans', () => 
     dbService!.getReadingPlans()
   );
-  ipcMain.handle('db:getReadingPlanDays', (_event, planId) => 
-    dbService!.getReadingPlanDays(planId)
+  ipcMain.handle('db:getReadingPlanDays', (_event, planId, lang) => 
+    dbService!.getReadingPlanDays(planId, lang)
   );
   ipcMain.handle('db:toggleReadingPlanDay', (_event, planId, dayNumber) => 
     dbService!.toggleReadingPlanDay(planId, dayNumber)

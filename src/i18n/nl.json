@@ -64,5 +64,45 @@
     "macro_view": "Canoniek Overzicht",
     "nodes": "Knopen",
     "links": "Verbindingen"
+  },
+  "settings": {
+    "title": "Werkstation Instellingen",
+    "subtitle": "Pas typografie, weergave en de standaard studievertaling voor kruisverwijzingen aan",
+    "tabs": {
+      "appearance": "Uiterlijk & Typografie",
+      "translations": "Vertalingen & Verwijzingen",
+      "general": "Algemeen & Taal"
+    },
+    "typography": {
+      "font_family": "Lettertype voor Lezer",
+      "font_family_desc": "Kies het lettertype voor het lezen van de Schriften",
+      "serif": "Klassiek met schreef (Crimson / Georgia)",
+      "sans": "Modern schreefloos (Inter / Rustig)",
+      "mono": "Monospace (Studie & Analyse)",
+      "font_size": "Tekstgrootte",
+      "font_size_desc": "Pas de basislettergrootte voor de bijbellezer aan",
+      "line_height": "Regelafstand",
+      "line_height_desc": "Afstand tussen tekstregels voor optimaal leescomfort",
+      "compact": "Compact",
+      "normal": "Normaal",
+      "relaxed": "Ruim",
+      "preview": "Live Typografie Voorbeeld"
+    },
+    "bible_versions": {
+      "study_version": "Kruisverwijzingen & Studie Bijbelversie",
+      "study_version_desc": "De bijbelvertaling waarin kruisverwijzingen, bladwijzers, de kennisgraaf en voorbeeldteksten worden weergegeven in plaats van alleen het Engels.",
+      "primary_version": "Primaire Leesvertaling",
+      "secondary_version": "Secundaire (Parallelle) Vertaling",
+      "installed_count": "{{count}} vertalingen geïnstalleerd",
+      "manage_translations": "Vertalingen Importeren / Beheren"
+    },
+    "language": {
+      "app_language": "Applicatietaal",
+      "app_language_desc": "Kies de interfacetaal voor het Berean Werkstation",
+      "english": "English (Engels)",
+      "dutch": "Nederlands"
+    },
+    "reset_defaults": "Standaardwaarden Herstellen",
+    "close": "Sluiten"
   }
 }

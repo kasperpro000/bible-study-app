@@ -9,7 +9,8 @@ interface VerseItemProps {
   crossRefsCount?: number;
   isBookmarked: boolean;
   fontSize: number;
-  fontFamily: 'serif' | 'sans';
+  fontFamily: 'serif' | 'sans' | 'mono';
+  lineSpacing?: 'compact' | 'normal' | 'relaxed';
   onSelectVerse: (verse: Verse) => void;
   onSetHighlight: (verse: Verse, color: string | null) => void;
   onToggleBookmark: (verse: Verse) => void;
@@ -30,11 +31,21 @@ export const VerseItem: React.FC<VerseItemProps> = ({
   isBookmarked,
   fontSize,
   fontFamily,
+  lineSpacing = 'relaxed',
   onSelectVerse,
   onSetHighlight,
   onToggleBookmark,
 }) => {
   const currentPalette = highlight ? HIGHLIGHT_PALETTE.find(p => p.name === highlight.color) : null;
+
+  const getLineHeightMultiplier = () => {
+    switch (lineSpacing) {
+      case 'compact': return 1.4;
+      case 'normal': return 1.6;
+      case 'relaxed': return 1.85;
+      default: return 1.65;
+    }
+  };
 
   return (
     <div
@@ -55,9 +66,9 @@ export const VerseItem: React.FC<VerseItemProps> = ({
       {/* Verse Text Body */}
       <div className="flex-1">
         <p
-          style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * 1.65}px` }}
+          style={{ fontSize: `${fontSize}px`, lineHeight: `${fontSize * getLineHeightMultiplier()}px` }}
           className={`${
-            fontFamily === 'serif' ? 'scripture-serif' : 'scripture-sans'
+            fontFamily === 'serif' ? 'scripture-serif' : fontFamily === 'mono' ? 'scripture-mono' : 'scripture-sans'
           } ${isSelected ? 'text-white' : 'text-slate-200'} tracking-normal`}
         >
           {verse.text}
